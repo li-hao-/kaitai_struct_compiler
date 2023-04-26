@@ -151,7 +151,7 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
-    out.puts(s"${idToStr(attrName)} ${kaitaiType2NativeType(attrType)}")
+    out.puts(s"""${idToStr(attrName)} ${kaitaiType2NativeType(attrType)} `json:"${idToStr(attrName)},omitempty"`""")
     translator.returnRes = None
   }
 
