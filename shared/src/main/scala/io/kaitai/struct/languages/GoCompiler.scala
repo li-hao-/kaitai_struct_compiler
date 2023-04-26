@@ -151,7 +151,12 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
-    out.puts(s"""${idToStr(attrName)} ${kaitaiType2NativeType(attrType)} `json:"${idToStr(attrName)},omitempty"`""")
+    val name = idToStr(attrName)
+    if (name.charAt(0).isUpper) {
+      out.puts(s"""$name ${kaitaiType2NativeType(attrType)} `json:"$name,omitempty"`""")
+    } else {
+      out.puts(s"""$name ${kaitaiType2NativeType(attrType)}""")
+    }
     translator.returnRes = None
   }
 
@@ -472,7 +477,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = {
     out.puts(s"${calculatedFlagForName(attrName)} bool")
-    out.puts(s"${idToStr(attrName)} ${kaitaiType2NativeType(attrType)}")
+    val getterName = idToStr(attrName).substring(0, idToStr(attrName).length - 1)
+    out.puts(s"""${idToStr(attrName)} ${kaitaiType2NativeType(attrType)} `json:"${getterName},omitempty"`""")
   }
 
   override def instanceHeader(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit = {
@@ -576,7 +582,7 @@ object GoCompiler extends LanguageCompilerStatic
       case SpecialIdentifier(name) => name
       case NamedIdentifier(name) => Utils.upperCamelCase(name)
       case NumberedIdentifier(idx) => s"_${NumberedIdentifier.TEMPLATE}$idx"
-      case InstanceIdentifier(name) => Utils.lowerCamelCase(name)
+      case InstanceIdentifier(name) => s"${Utils.upperCamelCase(name)}_"
       case RawIdentifier(innerId) => s"_raw_${idToStr(innerId)}"
       case IoStorageIdentifier(innerId) => s"_io_${idToStr(innerId)}"
     }
