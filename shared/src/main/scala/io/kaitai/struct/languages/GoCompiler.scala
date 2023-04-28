@@ -54,6 +54,7 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     }
     outHeader.puts
 
+    importList.add("encoding/json")
     importList.add("github.com/kaitai-io/kaitai_struct_go_runtime/kaitai")
 
     out.puts
@@ -514,6 +515,40 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   override def instanceSetCalculated(instName: InstanceIdentifier): Unit =
     out.puts(s"this.${calculatedFlagForName(instName)} = true")
+
+  override def instanceHMarshalJSONStart(className: List[String]): Unit = {
+    out.puts(s"func (this *${types2class(className)}) PreMarshal() (err error) {")
+    out.inc
+  }
+
+  override def instanceHMarshalJSONEntry(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit = {
+    out.puts(s"_, err = this.${publicMemberName(instName)}()")
+    out.puts(s"if err != nil {")
+    out.inc
+    out.puts("return err")
+    out.dec
+    out.puts("}")
+  }
+
+  override def instanceHMarshalJSONEnd(className: List[String]): Unit = {
+    out.puts("return err")
+    out.dec
+    out.puts("}\n")
+    out.puts(s"func (this *${types2class(className)}) MarshalJSON() (bytes []byte, err error) {")
+    out.inc
+    out.puts(s"err = this.PreMarshal()")
+    out.puts(s"if err != nil {")
+    out.inc
+    out.puts("return nil, err")
+    out.dec
+    out.puts("}")
+    out.puts(s"type Tmp${types2class(className)} ${types2class(className)}")
+    out.puts(s"var tmpJson * Tmp${types2class(className)}")
+    out.puts(s"tmpJson = (* Tmp${types2class(className)})(this)")
+    out.puts(s"return json.Marshal(tmpJson)")
+    out.dec
+    out.puts("}\n")
+  }
 
   override def enumDeclaration(curClass: List[String], enumName: String, enumColl: Seq[(Long, EnumValueSpec)]): Unit = {
     val fullEnumName: List[String] = curClass ++ List(enumName)

@@ -161,6 +161,10 @@ abstract class LanguageCompiler(
   def instanceReturn(instName: InstanceIdentifier, attrType: DataType): Unit
   def instanceCalculate(instName: Identifier, dataType: DataType, value: Ast.expr)
 
+  def instanceHMarshalJSONStart(className: List[String]): Unit = {}
+  def instanceHMarshalJSONEntry(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit = {}
+  def instanceHMarshalJSONEnd(className: List[String]): Unit = {}
+
   def enumDeclaration(curClass: List[String], enumName: String, enumColl: Seq[(Long, EnumValueSpec)]): Unit
 
   /**

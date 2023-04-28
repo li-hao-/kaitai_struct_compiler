@@ -43,6 +43,8 @@ class GoClassCompiler(
 
     compileAttrReaders(curClass.seq ++ extraAttrs)
 
+    compileMarshalJSON(curClass)
+
     // Recursive types
     compileSubclasses(curClass)
   }
@@ -91,5 +93,13 @@ class GoClassCompiler(
       lang.instanceCalculate(IS_LE_ID, CalcIntType, v)
     }
     lang.switchCases[FixedEndian](IS_LE_ID, ce.on, ce.cases, renderProc, renderProc)
+  }
+
+  def compileMarshalJSON(curClass: ClassSpec) = {
+    lang.instanceHMarshalJSONStart(curClass.name)
+    curClass.instances.foreach { case (instName, instSpec) =>
+      lang.instanceHMarshalJSONEntry(curClass.name, instName, instSpec.dataTypeComposite, instSpec.isNullable)
+    }
+    lang.instanceHMarshalJSONEnd(curClass.name)
   }
 }

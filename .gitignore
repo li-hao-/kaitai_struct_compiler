@@ -23,3 +23,5 @@ project/boot/
 # Unpacking complete binaries for testing purposes
 /runnable
 js/npm
+/.idea/runConfigurations/ksc_formats_asn2ksy.xml
+/.bsp/sbt.json
