@@ -154,7 +154,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
     val name = idToStr(attrName)
     if (name.charAt(0).isUpper) {
-      out.puts(s"""$name ${kaitaiType2NativeType(attrType)} `json:"$name,omitempty"`""")
+      val jsonName = Character.toLowerCase(name.charAt(0)) + name.substring(1)
+      out.puts(s"""$name ${kaitaiType2NativeType(attrType)} `json:"$jsonName,omitempty"`""")
     } else {
       out.puts(s"""$name ${kaitaiType2NativeType(attrType)}""")
     }
