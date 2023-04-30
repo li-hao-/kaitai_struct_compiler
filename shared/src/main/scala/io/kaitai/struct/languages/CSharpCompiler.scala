@@ -152,7 +152,7 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   override def readFooter(): Unit = fileFooter("")
 
-  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"private ${kaitaiType2NativeTypeNullable(attrType, isNullable)} ${privateMemberName(attrName)};")
   }
 
@@ -495,7 +495,7 @@ class CSharpCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   //</editor-fold>
 
-  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"private bool ${flagForInstName(attrName)};")
     out.puts(s"private ${kaitaiType2NativeTypeNullable(attrType, isNullable)} ${privateMemberName(attrName)};")
   }

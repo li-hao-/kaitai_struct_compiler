@@ -134,7 +134,7 @@ class RustCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts("}")
   }
 
-  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     attrName match {
       case ParentIdentifier | RootIdentifier | IoIdentifier =>
         // just ignore it for now
@@ -427,7 +427,7 @@ class RustCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   override def switchEnd(): Unit = universalFooter
 
-  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"    pub ${idToStr(attrName)}: Option<${kaitaiType2NativeType(attrType)}>,")
   }
 

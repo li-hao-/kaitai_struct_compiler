@@ -114,7 +114,7 @@ abstract class LanguageCompiler(
     */
   def readFooter(): Unit
 
-  def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit
+  def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit
   def attributeReader(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit
   def attributeDoc(id: Identifier, doc: DocSpec): Unit = {}
 
@@ -154,7 +154,7 @@ abstract class LanguageCompiler(
   def instanceDeclHeader(className: List[String]): Unit = {}
   def instanceClear(instName: InstanceIdentifier): Unit = {}
   def instanceSetCalculated(instName: InstanceIdentifier): Unit = {}
-  def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = attributeDeclaration(attrName, attrType, isNullable)
+  def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = attributeDeclaration(attrName, attrType, isNullable, doc)
   def instanceHeader(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit
   def instanceFooter: Unit
   def instanceCheckCacheAndReturn(instName: InstanceIdentifier, dataType: DataType): Unit

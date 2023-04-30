@@ -314,7 +314,7 @@ class CppCompiler(
     outSrc.puts("}")
   }
 
-  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     ensureMode(PrivateAccess)
     outHdr.puts(s"${kaitaiType2NativeType(attrType)} ${privateMemberName(attrName)};")
     declareNullFlag(attrName, isNullable)
@@ -880,7 +880,7 @@ class CppCompiler(
 
   override def switchBytesOnlyAsRaw = true
 
-  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     ensureMode(PrivateAccess)
     outHdr.puts(s"bool ${calculatedFlagForName(attrName)};")
     outHdr.puts(s"${kaitaiType2NativeType(attrType)} ${privateMemberName(attrName)};")

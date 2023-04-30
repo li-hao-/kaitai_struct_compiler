@@ -133,7 +133,7 @@ class PerlCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   override def readFooter(): Unit = universalFooter
 
-  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {}
+  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {}
 
   override def attributeReader(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
     attrName match {

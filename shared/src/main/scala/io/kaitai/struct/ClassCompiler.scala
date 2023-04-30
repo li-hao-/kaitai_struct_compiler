@@ -197,7 +197,7 @@ class ClassCompiler(
       } else {
         attr.isNullable
       }
-      lang.attributeDeclaration(attr.id, attr.dataTypeComposite, isNullable)
+      lang.attributeDeclaration(attr.id, attr.dataTypeComposite, isNullable, attr.doc)
     }
   }
 
@@ -354,7 +354,7 @@ class ClassCompiler(
     } else {
       instSpec.isNullable
     }
-    lang.instanceDeclaration(instName, instSpec.dataTypeComposite, isNullable)
+    lang.instanceDeclaration(instName, instSpec.dataTypeComposite, isNullable, instSpec.doc)
   }
 
   def compileEnum(curClass: ClassSpec, enumColl: EnumSpec): Unit =

@@ -118,10 +118,10 @@ class NimCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     }
     handleAssignment(varDest, expr, rep, false)
   }
-  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"`${idToStr(attrName)}`*: ${ksToNim(attrType)}")
   }
-  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"`${idToStr(attrName)}`: ${ksToNim(attrType)}")
     out.puts(s"`${instanceFlagIdentifier(attrName)}`: bool")
   }

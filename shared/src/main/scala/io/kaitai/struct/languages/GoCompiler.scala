@@ -151,11 +151,16 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     universalFooter
   }
 
-  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def attributeDeclaration(attrName: Identifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     val name = idToStr(attrName)
     if (name.charAt(0).isUpper) {
       val jsonName = Character.toLowerCase(name.charAt(0)) + name.substring(1)
-      out.puts(s"""$name ${kaitaiType2NativeType(attrType)} `json:"$jsonName,omitempty"`""")
+      var extra = s"""json:"$jsonName,omitempty""""
+      if (!doc.isEmpty) {
+        val validation = doc.summary.get
+        extra = s"""$extra validate:"$validation""""
+      }
+      out.puts(s"""$name ${kaitaiType2NativeType(attrType)} `$extra`""")
     } else {
       out.puts(s"""$name ${kaitaiType2NativeType(attrType)}""")
     }
@@ -477,10 +482,15 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.inc
   }
 
-  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean): Unit = {
+  override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"${calculatedFlagForName(attrName)} bool")
     val getterName = idToStr(attrName).substring(0, idToStr(attrName).length - 1)
-    out.puts(s"""${idToStr(attrName)} ${kaitaiType2NativeType(attrType)} `json:"${getterName},omitempty"`""")
+    var extra = s"""json:"$getterName,omitempty""""
+    if (!doc.isEmpty) {
+      val validation = doc.summary.get
+      extra = s"""$extra validate:"$validation"""
+    }
+    out.puts(s"""${idToStr(attrName)} ${kaitaiType2NativeType(attrType)} `$extra`""")
   }
 
   override def instanceHeader(className: List[String], instName: InstanceIdentifier, dataType: DataType, isNullable: Boolean): Unit = {
