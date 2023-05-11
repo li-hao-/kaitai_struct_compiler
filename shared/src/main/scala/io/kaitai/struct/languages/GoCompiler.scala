@@ -157,8 +157,10 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
       val jsonName = Character.toLowerCase(name.charAt(0)) + name.substring(1)
       var extra = s"""json:"$jsonName,omitempty""""
       if (!doc.isEmpty) {
-        val validation = doc.summary.get
-        extra = s"""$extra validate:"$validation""""
+        val validationMatcher = """go[(](.*)[)]""".r
+        doc.summary.get match {
+          case validationMatcher(validation) => extra = s"""$extra validate:"$validation""""
+          case _ =>        }
       }
       out.puts(s"""$name ${kaitaiType2NativeType(attrType)} `$extra`""")
     } else {
@@ -487,8 +489,11 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     val getterName = idToStr(attrName).substring(0, idToStr(attrName).length - 1)
     var extra = s"""json:"$getterName,omitempty""""
     if (!doc.isEmpty) {
-      val validation = doc.summary.get
-      extra = s"""$extra validate:"$validation"""
+      val validationMatcher = """go[(](.*)[)]""".r
+      doc.summary.get match {
+        case validationMatcher(validation) => extra = s"""$extra validate:"$validation""""
+        case _ =>
+      }
     }
     out.puts(s"""${idToStr(attrName)} ${kaitaiType2NativeType(attrType)} `$extra`""")
   }
