@@ -486,7 +486,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
   override def instanceDeclaration(attrName: InstanceIdentifier, attrType: DataType, isNullable: Boolean, doc: DocSpec): Unit = {
     out.puts(s"${calculatedFlagForName(attrName)} bool")
-    val getterName = idToStr(attrName).substring(0, idToStr(attrName).length - 1)
+    var getterName = idToStr(attrName).substring(0, idToStr(attrName).length - 1)
+    getterName = Character.toLowerCase(getterName.charAt(0)) + getterName.substring(1)
     var extra = s"""json:"$getterName,omitempty""""
     if (!doc.isEmpty) {
       val validationMatcher = """go[(](.*)[)]""".r
