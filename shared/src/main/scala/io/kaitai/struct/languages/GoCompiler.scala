@@ -55,6 +55,7 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     outHeader.puts
 
     importList.add("encoding/json")
+    importList.add("fmt")
     importList.add("reflect")
     importList.add("github.com/kaitai-io/kaitai_struct_go_runtime/kaitai")
 
@@ -91,6 +92,40 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
          |	return modifiedJSON, nil
          |}
          |
+         |func replaceDecodedWithFieldValue(jsonData []byte) ([]byte, error) {
+         |	// Unmarshal JSON into a slice of KeyValue structs
+         |	var dataMap map[string]interface{}
+         |	err := json.Unmarshal(jsonData, &dataMap)
+         |	if err != nil {
+         |		return nil, err
+         |	}
+         |  // Iterate over the dataMap
+         |  for key, value := range dataMap {
+         |    if entry, ok := value.(map[string]interface{}); ok {
+         |			// Check if the entry has "ans1int" field
+         |			if ans1int, ok := entry["ans1int"].(map[string]interface{}); ok {
+         |				// Replace "decoded" with "value" pointing to decoded.value
+         |				entry["value"] = ans1int["value"]
+         |				delete(entry, "ans1int")
+         |				dataMap[key] = entry
+         |			}
+         |			// Check if the entry has "decoded" field with "def" as "StrContainer"
+         |			if decoded, ok := entry["decoded"].(map[string]interface{}); ok && decoded["def"] == "StrContainer" {
+         |				// Replace "decoded" with "value" pointing to decoded.value
+         |				entry["value"] = fmt.Sprintf("%v (%s)", entry["value"], decoded["value"])
+         |				delete(entry, "decoded")
+         |				dataMap[key] = entry
+         |			}
+         |    }
+         |  }
+         |	// Marshal the modified slice back to JSON
+         |	modifiedJSON, err := json.Marshal(dataMap)
+         |	if err != nil {
+         |		return nil, err
+         |	}
+         |	return modifiedJSON, nil
+         |}
+         |
          |func fixValueInJSON(data any, jsonData []byte) ([]byte, error) {
          |	valueField := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Value")
          |	if valueField.Kind() == reflect.Slice && valueField.Type().Elem().Kind() == reflect.Uint8 {
@@ -106,7 +141,7 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
          |			return replaceValueInJSON(jsonData, "value", string(byteValue))
          |		}
          |	}
-         |	return jsonData, nil
+         |	return replaceDecodedWithFieldValue(jsonData)
          |}
          """.stripMargin)
   }
@@ -619,6 +654,9 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
          |		Asn1Type: "$simpleName",
          |		Alias:    (*Alias)(this),
          |	})
+         |	if err != nil {
+         |		return nil, err
+         |	}
          |	return fixValueInJSON(this, json)
          |""".stripMargin)
     out.dec
