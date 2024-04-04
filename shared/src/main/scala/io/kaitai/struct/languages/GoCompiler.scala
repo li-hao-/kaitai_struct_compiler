@@ -55,9 +55,60 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     outHeader.puts
 
     importList.add("encoding/json")
+    importList.add("reflect")
     importList.add("github.com/kaitai-io/kaitai_struct_go_runtime/kaitai")
 
     out.puts
+  }
+
+  override def fileFooter(name: String): Unit = {
+    out.puts(
+      s"""
+         |func isPrintable(data []byte) bool {
+         |	for _, b := range data {
+         |		if b < 32 || b > 126 {
+         |			return false
+         |		}
+         |	}
+         |	return true
+         |}
+         |
+         |func replaceValueInJSON(jsonData []byte, key string, newValue interface{}) ([]byte, error) {
+         |	// Unmarshal JSON into a slice of KeyValue structs
+         |	var dataMap map[string]interface{}
+         |	err := json.Unmarshal(jsonData, &dataMap)
+         |	if err != nil {
+         |		return nil, err
+         |	}
+         |	dataMap[key] = newValue
+         |
+         |	// Marshal the modified slice back to JSON
+         |	modifiedJSON, err := json.Marshal(dataMap)
+         |	if err != nil {
+         |		return nil, err
+         |	}
+         |
+         |	return modifiedJSON, nil
+         |}
+         |
+         |func fixValueInJSON(data any, jsonData []byte) ([]byte, error) {
+         |	valueField := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Value")
+         |	if valueField.Kind() == reflect.Slice && valueField.Type().Elem().Kind() == reflect.Uint8 {
+         |		decodeMethod := reflect.ValueOf(data).MethodByName("DecodeValue")
+         |		if decodeMethod.IsValid() {
+         |			result := decodeMethod.Call(nil)[0].String()
+         |			if result !=  "" {
+         |				return replaceValueInJSON(jsonData, "value", result)
+         |			}
+         |		}
+         |  	byteValue := valueField.Bytes()
+         |		if isPrintable(byteValue) {
+         |			return replaceValueInJSON(jsonData, "value", string(byteValue))
+         |		}
+         |	}
+         |	return jsonData, nil
+         |}
+         """.stripMargin)
   }
 
   override def classHeader(name: List[String]): Unit = {
@@ -548,21 +599,28 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
   }
 
   override def instanceHMarshalJSONEnd(className: List[String]): Unit = {
+    val typeName = types2class(className)
+    val simpleName = type2class(className.last)
     out.puts("return err")
     out.dec
     out.puts("}\n")
-    out.puts(s"func (this *${types2class(className)}) MarshalJSON() (bytes []byte, err error) {")
-    out.inc
-    out.puts(s"err = this.PreMarshal()")
-    out.puts(s"if err != nil {")
-    out.inc
-    out.puts("return nil, err")
-    out.dec
-    out.puts("}")
-    out.puts(s"type Tmp${types2class(className)} ${types2class(className)}")
-    out.puts(s"var tmpJson * Tmp${types2class(className)}")
-    out.puts(s"tmpJson = (* Tmp${types2class(className)})(this)")
-    out.puts(s"return json.Marshal(tmpJson)")
+    out.puts(
+      s"""
+         |func (this *$typeName) MarshalJSON() (bytes []byte, err error) {
+         |  err = this.PreMarshal()
+         |  if err != nil {
+         |    return nil, err
+         |  }
+         |  type Alias $typeName
+         |	json, err := json.Marshal(&struct {
+         |		Asn1Type string `json:"def,omitempty"`
+         |		*Alias
+         |	}{
+         |		Asn1Type: "$simpleName",
+         |		Alias:    (*Alias)(this),
+         |	})
+         |	return fixValueInJSON(this, json)
+         |""".stripMargin)
     out.dec
     out.puts("}\n")
   }
