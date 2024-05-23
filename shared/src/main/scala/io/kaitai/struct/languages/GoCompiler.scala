@@ -56,8 +56,10 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
     importList.add("encoding/json")
     importList.add("fmt")
+    importList.add("os")
     importList.add("reflect")
     importList.add("github.com/kaitai-io/kaitai_struct_go_runtime/kaitai")
+    importList.add("github.com/pkg/errors")
 
     out.puts
   }
@@ -295,7 +297,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
     out.puts(s"if err != nil {")
     out.inc
-    out.puts("return err")
+    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"%+v\\n\", errors.WithStack(err))")
+    out.puts("return nil")
     out.dec
     out.puts("}")
 
@@ -628,7 +631,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"_, err = this.${publicMemberName(instName)}()")
     out.puts(s"if err != nil {")
     out.inc
-    out.puts("return err")
+    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"%+v\\n\", errors.WithStack(err))")
+    out.puts("return nil")
     out.dec
     out.puts("}")
   }
@@ -647,17 +651,26 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
          |    return nil, err
          |  }
          |  type Alias $typeName
-         |	json, err := json.Marshal(&struct {
-         |		Asn1Type string `json:"def,omitempty"`
+         |	result, err := json.Marshal(&struct {
+         |		Asn1Type string `json:"def"`
          |		*Alias
          |	}{
          |		Asn1Type: "$simpleName",
          |		Alias:    (*Alias)(this),
          |	})
          |	if err != nil {
-         |		return nil, err
-         |	}
-         |	return fixValueInJSON(this, json)
+         |	  result, err = json.Marshal(&struct {
+         |      Asn1Type  string `json:"def"`
+         |      Error     string `json:"decodingError"`
+         |    }{
+         |      Asn1Type: "$simpleName",
+         |      Error:    err.Error(),
+         |    })
+         |    if err != nil {
+         |      return nil, err
+         |    }
+         |  }
+         |	return fixValueInJSON(this, result)
          |""".stripMargin)
     out.dec
     out.puts("}\n")

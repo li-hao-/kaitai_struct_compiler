@@ -499,10 +499,11 @@ class GoTranslator(out: StringLanguageOutputWriter, provider: TypeProvider, impo
   def outAddErrCheck() {
     out.puts("if err != nil {")
     out.inc
+    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"%+v\\n\", errors.WithStack(err))")
 
     val noValueAndErr = returnRes match {
-      case None => "err"
-      case Some(r) => s"$r, err"
+      case None => "nil"
+      case Some(r) => s"$r, nil"
     }
 
     out.puts(s"return $noValueAndErr")
