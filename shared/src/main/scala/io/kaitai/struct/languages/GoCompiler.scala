@@ -57,6 +57,7 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     importList.add("encoding/json")
     importList.add("fmt")
     importList.add("os")
+    importList.add("runtime")
     importList.add("reflect")
     importList.add("github.com/kaitai-io/kaitai_struct_go_runtime/kaitai")
     importList.add("github.com/pkg/errors")
@@ -131,6 +132,11 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
          |func fixValueInJSON(data any, jsonData []byte) ([]byte, error) {
          |	valueField := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Value")
          |	if valueField.Kind() == reflect.Slice && valueField.Type().Elem().Kind() == reflect.Uint8 {
+         | 		defer func() {
+         |			if r := recover(); r != nil {
+         |				_, _ = fmt.Fprintf(os.Stderr, "Failed to decode 0x%02X as %s\\n", valueField.Bytes(), reflect.TypeOf(data).String())
+         |			}
+         |		}()
          |		decodeMethod := reflect.ValueOf(data).MethodByName("DecodeValue")
          |		if decodeMethod.IsValid() {
          |			result := decodeMethod.Call(nil)[0].String()
@@ -297,7 +303,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
 
     out.puts(s"if err != nil {")
     out.inc
-    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"%+v\\n\", errors.WithStack(err))")
+    out.puts("_, _, line, _ := runtime.Caller(0)")
+    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"Error to decode %s due to %s at line %d\\n\", reflect.TypeOf(this).String(), err.Error(), line)")
     out.puts("return nil")
     out.dec
     out.puts("}")
@@ -631,7 +638,8 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
     out.puts(s"_, err = this.${publicMemberName(instName)}()")
     out.puts(s"if err != nil {")
     out.inc
-    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"%+v\\n\", errors.WithStack(err))")
+    out.puts("_, _, line, _ := runtime.Caller(0)")
+    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"Error to decode %s due to %s at line %d\\n\", reflect.TypeOf(this).String(), err.Error(), line)")
     out.puts("return nil")
     out.dec
     out.puts("}")

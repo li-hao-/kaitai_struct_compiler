@@ -499,7 +499,8 @@ class GoTranslator(out: StringLanguageOutputWriter, provider: TypeProvider, impo
   def outAddErrCheck() {
     out.puts("if err != nil {")
     out.inc
-    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"%+v\\n\", errors.WithStack(err))")
+    out.puts("_, _, line, _ := runtime.Caller(0)")
+    out.puts("_, _ = fmt.Fprintf(os.Stderr, \"Error to decode %s due to %s at line %d\\n\", reflect.TypeOf(this).String(), err.Error(), line)")
 
     val noValueAndErr = returnRes match {
       case None => "nil"
