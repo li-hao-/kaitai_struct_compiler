@@ -130,22 +130,22 @@ class GoCompiler(typeProvider: ClassTypeProvider, config: RuntimeConfig)
          |}
          |
          |func fixValueInJSON(data any, jsonData []byte) ([]byte, error) {
-         |	valueField := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Value")
-         |	if valueField.Kind() == reflect.Slice && valueField.Type().Elem().Kind() == reflect.Uint8 {
-         | 		defer func() {
-         |			if r := recover(); r != nil {
-         |				_, _ = fmt.Fprintf(os.Stderr, "Failed to decode 0x%02X as %s\\n", valueField.Bytes(), reflect.TypeOf(data).String())
-         |			}
-         |		}()
-         |		decodeMethod := reflect.ValueOf(data).MethodByName("DecodeValue")
-         |		if decodeMethod.IsValid() {
-         |			result := decodeMethod.Call(nil)[0].String()
-         |			if result !=  "" {
-         |				return replaceValueInJSON(jsonData, "value", result)
-         |			}
+	       |  valueField := reflect.Indirect(reflect.ValueOf(data)).FieldByName("Value")
+         |	defer func() {
+         |		if r := recover(); r != nil {
+         |			_, _ = fmt.Fprintf(os.Stderr, "Failed to decode 0x%02X as %s\n", valueField.Bytes(), reflect.TypeOf(data).String())
          |		}
-         |  	byteValue := valueField.Bytes()
-         |		if isPrintable(byteValue) {
+         |	}()
+         |	decodeMethod := reflect.ValueOf(data).MethodByName("DecodeValue")
+         |	if decodeMethod.IsValid() {
+         |		result := decodeMethod.Call(nil)[0].String()
+         |		if result != "" {
+         |			return replaceValueInJSON(jsonData, "value", result)
+         |		}
+         |	}
+         |	if valueField.Kind() == reflect.Slice && valueField.Type().Elem().Kind() == reflect.Uint8 {
+         |		byteValue := valueField.Bytes()
+         |		if  isPrintable(byteValue) {
          |			return replaceValueInJSON(jsonData, "value", string(byteValue))
          |		}
          |	}
